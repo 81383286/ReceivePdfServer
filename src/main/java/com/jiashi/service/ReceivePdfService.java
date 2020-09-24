@@ -123,8 +123,9 @@ public class ReceivePdfService {
         detail.setAssortid(fileInfo.getAssortId());
         //更新时间
         detail.setUploaddatetime(new Date());
+        //为空，新增
+        detail.setSys("receivePdf");
         if(CollectionUtils.isEmpty(details)){
-            //为空，新增
             detailMapper.insertSelective(detail);
         }else{
             detail.setId(details.get(0).getId());
