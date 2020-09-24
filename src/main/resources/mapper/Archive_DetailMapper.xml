@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jiashi.dao.Archive_DetailMapper">
+  <resultMap id="BaseResultMap" type="com.jiashi.entity.Archive_Detail">
+    <id column="id" jdbcType="NVARCHAR" property="id" />
+    <result column="PDF_PATH" jdbcType="NVARCHAR" property="pdfPath" />
+    <result column="MasterID" jdbcType="NVARCHAR" property="masterid" />
+    <result column="UpLoadDateTime" jdbcType="TIMESTAMP" property="uploaddatetime" />
+    <result column="AssortID" jdbcType="NVARCHAR" property="assortid" />
+    <result column="Source" jdbcType="NVARCHAR" property="source" />
+    <result column="SubAssort" jdbcType="NVARCHAR" property="subassort" />
+    <result column="Title" jdbcType="NVARCHAR" property="title" />
+    <result column="flag" jdbcType="NVARCHAR" property="flag" />
+    <result column="Sys" jdbcType="NVARCHAR" property="sys" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, PDF_PATH, MasterID, UpLoadDateTime, AssortID, Source, SubAssort, Title, flag, 
+    Sys
+  </sql>
+  <insert id="insertSelective" parameterType="com.jiashi.entity.Archive_Detail">
+    insert into archive_detail
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <!--<if test="id != null and id!=''">-->
+      id,
+      <!--</if>-->
+      <if test="pdfPath != null">
+        PDF_PATH,
+      </if>
+      <if test="masterid != null">
+        MasterID,
+      </if>
+      <if test="uploaddatetime != null">
+        UpLoadDateTime,
+      </if>
+      <if test="assortid != null">
+        AssortID,
+      </if>
+      <if test="source != null">
+        Source,
+      </if>
+      <if test="subassort != null">
+        SubAssort,
+      </if>
+      <if test="title != null">
+        Title,
+      </if>
+      <if test="flag != null">
+        flag,
+      </if>
+      <if test="sys != null">
+        Sys,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <!--<if test="id != null and id!=''">-->
+      (select replace(newid(),'-','')),
+      <!--</if>-->
+      <if test="pdfPath != null">
+        #{pdfPath,jdbcType=NVARCHAR},
+      </if>
+      <if test="masterid != null">
+        #{masterid,jdbcType=NVARCHAR},
+      </if>
+      <if test="uploaddatetime != null">
+        #{uploaddatetime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="assortid != null">
+        #{assortid,jdbcType=NVARCHAR},
+      </if>
+      <if test="source != null">
+        #{source,jdbcType=NVARCHAR},
+      </if>
+      <if test="subassort != null">
+        #{subassort,jdbcType=NVARCHAR},
+      </if>
+      <if test="title != null">
+        #{title,jdbcType=NVARCHAR},
+      </if>
+      <if test="flag != null">
+        #{flag,jdbcType=NVARCHAR},
+      </if>
+      <if test="sys != null">
+        #{sys,jdbcType=NVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jiashi.entity.Archive_Detail">
+    update archive_detail
+    <set>
+      <if test="pdfPath != null and pdfPath!=''">
+        PDF_PATH = #{pdfPath,jdbcType=NVARCHAR},
+      </if>
+      <if test="masterid != null and masterid!=''">
+        MasterID = #{masterid,jdbcType=NVARCHAR},
+      </if>
+      <if test="uploaddatetime != null">
+        UpLoadDateTime = #{uploaddatetime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="assortid != null and assortid!=''">
+        AssortID = #{assortid,jdbcType=NVARCHAR},
+      </if>
+      <if test="source != null and source!=''">
+        Source = #{source,jdbcType=NVARCHAR},
+      </if>
+      <if test="subassort != null and subassort!=''">
+        SubAssort = #{subassort,jdbcType=NVARCHAR},
+      </if>
+      <if test="title != null and title!=''">
+        Title = #{title,jdbcType=NVARCHAR},
+      </if>
+      <if test="flag != null and pdfPath!=''">
+        flag = #{flag,jdbcType=NVARCHAR},
+      </if>
+      <if test="sys != null and sys!=''">
+        Sys = #{sys,jdbcType=NVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=NVARCHAR}
+  </update>
+  <!--根据masterId与文件标识查询detail记录-->
+  <select id="selectAllByMasterIdAndFileFlag" resultMap="BaseResultMap">
+      SELECT
+        id,PDF_PATH
+      FROM
+        archive_detail
+      <where>
+          <if test="masterid != null and masterid != ''">
+              AND MasterID = #{masterid,jdbcType=NVARCHAR}
+          </if>
+          <if test="subassort != null and subassort != ''">
+              AND SubAssort = #{subassort,jdbcType=NVARCHAR}
+          </if>
+      </where>
+  </select>
+</mapper>

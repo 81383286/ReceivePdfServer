@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jiashi.dao.ArchiveReceivePdfLogMapper">
+  <resultMap id="BaseResultMap" type="com.jiashi.entity.FileInfo">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="patient_id" jdbcType="NVARCHAR" property="patientId" />
+    <result column="file_flag" jdbcType="NVARCHAR" property="fileFlag" />
+    <result column="file_title" jdbcType="NVARCHAR" property="fileTitle" />
+    <result column="fentry_no" jdbcType="NVARCHAR" property="fentryNo" />
+    <result column="assort_id" jdbcType="NVARCHAR" property="assortId" />
+    <result column="sys_flag" jdbcType="NVARCHAR" property="sysFlag" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="port" jdbcType="INTEGER" property="port" />
+    <result column="success" jdbcType="TINYINT" property="success" />
+    <result column="pdf_path" jdbcType="NVARCHAR" property="pdfPath" />
+    <result column="end_time" jdbcType="TIMESTAMP" property="endTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, patient_id, file_flag, file_title, fentry_no, assort_id, sys_flag, create_time, port,
+    success,pdf_path,end_time
+  </sql>
+  <insert id="insertSelective" parameterType="com.jiashi.entity.FileInfo" useGeneratedKeys="true" keyProperty="id">
+    insert into archive_receivepdf_log
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="patientId != null">
+        patient_id,
+      </if>
+      <if test="fileFlag != null">
+        file_flag,
+      </if>
+      <if test="fileTitle != null">
+        file_title,
+      </if>
+      <if test="fentryNo != null">
+        fentry_no,
+      </if>
+      <if test="assortId != null">
+        assort_id,
+      </if>
+      <if test="sysFlag != null">
+        sys_flag,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="port != null">
+        port,
+      </if>
+      <if test="success != null">
+        success,
+      </if>
+      <if test="pdfPath != null">
+        pdf_path,
+      </if>
+      <if test="endTime != null">
+        end_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="patientId != null">
+        #{patientId,jdbcType=NVARCHAR},
+      </if>
+      <if test="fileFlag != null">
+        #{fileFlag,jdbcType=NVARCHAR},
+      </if>
+      <if test="fileTitle != null">
+        #{fileTitle,jdbcType=NVARCHAR},
+      </if>
+      <if test="fentryNo != null">
+        #{fentryNo,jdbcType=NVARCHAR},
+      </if>
+      <if test="assortId != null">
+        #{assortId,jdbcType=NVARCHAR},
+      </if>
+      <if test="sysFlag != null">
+        #{sysFlag,jdbcType=NVARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="port != null">
+        #{port,jdbcType=INTEGER},
+      </if>
+      <if test="success != null">
+        #{success,jdbcType=TINYINT},
+      </if>
+      <if test="pdfPath != null">
+        #{pdfPath,jdbcType=NVARCHAR},
+      </if>
+      <if test="endTime != null">
+        #{endTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.jiashi.entity.FileInfo">
+    update archive_receivepdf_log
+    <set>
+      <if test="patientId != null and patientId!=''">
+        patient_id = #{patientId,jdbcType=NVARCHAR},
+      </if>
+      <if test="fileFlag != null and fileFlag!=''">
+        file_flag = #{fileFlag,jdbcType=NVARCHAR},
+      </if>
+      <if test="fileTitle != null and fileTitle!=''">
+        file_title = #{fileTitle,jdbcType=NVARCHAR},
+      </if>
+      <if test="fentryNo != null and fentryNo!=''">
+        fentry_no = #{fentryNo,jdbcType=NVARCHAR},
+      </if>
+      <if test="assortId != null and assortId!=''">
+        assort_id = #{assortId,jdbcType=NVARCHAR},
+      </if>
+      <if test="sysFlag != null and sysFlag!=''">
+        sys_flag = #{sysFlag,jdbcType=NVARCHAR},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="port != null">
+        port = #{port,jdbcType=INTEGER},
+      </if>
+      <if test="success != null and success!=''">
+        success = #{success,jdbcType=TINYINT},
+      </if>
+      <if test="pdfPath != null and pdfPath!=''">
+        pdf_path = #{pdfPath,jdbcType=NVARCHAR},
+      </if>
+      <if test="endTime != null">
+        end_time = #{endTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=NVARCHAR}
+  </update>
+</mapper>

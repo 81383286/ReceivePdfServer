@@ -1,0 +1,13 @@
+{
+  "properties": [
+    {
+      "name": "spring.http.multipart",
+      "type": "java.lang.String",
+      "description": "Description for spring.http.multipart."
+    },
+    {
+      "name": "spring.http.multipart.enabled",
+      "type": "java.lang.String",
+      "description": "Description for spring.http.multipart.enabled."
+    }
+  ] }

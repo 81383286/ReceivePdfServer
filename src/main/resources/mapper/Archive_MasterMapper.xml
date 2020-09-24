@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jiashi.dao.Archive_MasterMapper">
+  <resultMap id="BaseResultMap" type="com.jiashi.entity.Archive_Master">
+    <id column="id" jdbcType="NVARCHAR" property="id" />
+    <result column="patient_id" jdbcType="NVARCHAR" property="patientId" />
+    <result column="inp_no" jdbcType="NVARCHAR" property="inpNo" />
+    <result column="visit_id" jdbcType="NVARCHAR" property="visitId" />
+    <result column="name" jdbcType="NVARCHAR" property="name" />
+    <result column="sex" jdbcType="NVARCHAR" property="sex" />
+    <result column="dept_name" jdbcType="NVARCHAR" property="deptName" />
+    <result column="discharge_date_time" jdbcType="NVARCHAR" property="dischargeDateTime" />
+    <result column="ArchiveState" jdbcType="NVARCHAR" property="archivestate" />
+    <result column="admission_date_time" jdbcType="NVARCHAR" property="admissionDateTime" />
+    <result column="dept_admission_to" jdbcType="NVARCHAR" property="deptAdmissionTo" />
+    <result column="check_doctor" jdbcType="NVARCHAR" property="checkDoctor" />
+    <result column="check_datetime" jdbcType="NVARCHAR" property="checkDatetime" />
+    <result column="checked_doctor" jdbcType="NVARCHAR" property="checkedDoctor" />
+    <result column="checked_datetime" jdbcType="NVARCHAR" property="checkedDatetime" />
+    <result column="LockInfo" jdbcType="NVARCHAR" property="lockinfo" />
+    <result column="DOCTOR_IN_CHARGE" jdbcType="NVARCHAR" property="doctorInCharge" />
+    <result column="ID_NO" jdbcType="NVARCHAR" property="idNo" />
+    <result column="DISCHARGE_DISPOSITION" jdbcType="NVARCHAR" property="dischargeDisposition" />
+    <result column="dept_code_lend" jdbcType="NVARCHAR" property="deptCodeLend" />
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, patient_id, inp_no, visit_id, name, sex, dept_name, discharge_date_time, ArchiveState, 
+    admission_date_time, dept_admission_to, check_doctor, check_datetime, checked_doctor, 
+    checked_datetime, LockInfo, DOCTOR_IN_CHARGE, ID_NO, DISCHARGE_DISPOSITION, dept_code_lend
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from archive_master
+    where id = #{id,jdbcType=NVARCHAR}
+  </select>
+  <!--根据及账号查询记录-->
+  <select id="selectAllByPatientId" resultMap="BaseResultMap">
+    SELECT id FROM archive_master
+    <where>
+      <if test="patientId != null and patientId != ''">
+          AND patient_id = #{patientId,jdbcType=NVARCHAR}
+      </if>
+    </where>
+  </select>
+</mapper>
