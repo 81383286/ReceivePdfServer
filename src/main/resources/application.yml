@@ -1,6 +1,6 @@
 server:
   ##端口
-  port: 8083
+  port: 8082
   servlet:
     ##根路径
     context-path: /receivePdf
@@ -11,7 +11,7 @@ spring:
   datasource:
     username: sa
     #password: docus702
-    password: AbcXyz123
+    password: xjgs+docus911
     url: jdbc:sqlserver://localhost:1433;databaseName=emr_record
     driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
   #上传文件大小
@@ -23,8 +23,9 @@ spring:
 ##日志
 logging:
   level:
+    root: ERROR
     org.springframework.web: ERROR
-    com.yiibai: DEBUG
+    com.jiashi: ERROR
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
@@ -38,6 +39,7 @@ mybatis:
   mybatis.configuration.map-underscore-to-camel-case: true
 
 ##保存pdf文件根目录
+#tempPdfFileSrc: C:\pdfTemp\
 #pdfFileSrc: C:\pdf\
+tempPdfFileSrc: D:\pdf\
 pdfFileSrc: G:\pdf\
-

@@ -21,8 +21,8 @@ public class ReceivePdfController {
             long start = System.currentTimeMillis();
             Msg msg = receivePdfService.receivePdf(fileInfo);
             long end = System.currentTimeMillis();
-            log.info("所用时间:"+(end-start)/1000.0+"s");
-            log.info(msg.toString());
+            log.error("所用时间:"+(end-start)/1000.0+"s");
+            log.error(msg.toString());
             return msg;
         }catch (Exception e){
             e.printStackTrace();

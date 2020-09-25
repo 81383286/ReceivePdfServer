@@ -19,6 +19,8 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 @Slf4j
@@ -30,13 +32,15 @@ public class ReceivePdfService {
     private Archive_DetailMapper detailMapper;
     @Autowired
     private ArchiveReceivePdfLogMapper receivePdfLogMapper;
+    @Value("${tempPdfFileSrc}")
+    private String tempPdfFileSrc;
     @Value("${pdfFileSrc}")
     private String pdfFileSrc;
     @Value("${server.port}")
     private String port;
     public Msg receivePdf(FileInfo fileInfo) throws Exception{
         fileInfo.setCreateTime(new Date());
-        log.info(fileInfo.toString());
+        log.error(fileInfo.toString());
         //判断不为空
         Msg msg = JedgeNullParams(fileInfo);
         if(msg.getCode() == 200){
@@ -81,7 +85,7 @@ public class ReceivePdfService {
         fileInfo.setPort(Integer.valueOf(port));
         //添加进日志
         receivePdfLogMapper.insertSelective(fileInfo);
-        log.info(fileInfo.toString());
+        log.error(fileInfo.toString());
         //数据库及转存操作
         savePdf(fileInfo,list.get(0));
         return Msg.success();
@@ -112,12 +116,7 @@ public class ReceivePdfService {
         detail.setSource(sysFlag);
         //新文件路径
         String uuid = UUID.randomUUID().toString().replaceAll("-","");
-        String pdfPath = pdfFileSrc + sysFlag +  "\\" + fileInfo.getPatientId();
-        //创建目录
-        if(!new File(pdfPath).isDirectory()){
-            new File(pdfPath).mkdirs();
-        }
-        String pdfSrc = pdfPath + "\\" + uuid + ".pdf";
+        String pdfSrc = getFileSrc(fileInfo, sysFlag, uuid, pdfFileSrc);
         detail.setPdfPath(pdfSrc);
         //设置分类id
         detail.setAssortid(fileInfo.getAssortId());
@@ -137,14 +136,40 @@ public class ReceivePdfService {
             }
             detailMapper.updateByPrimaryKeySelective(detail);
         }
-        //上传
-        fileInfo.getFile().transferTo(new File(pdfSrc));
+        //上传到服务器本地磁盘D临时文件夹
+        String tempPdfSrc = getFileSrc(fileInfo, sysFlag, uuid, tempPdfFileSrc);
+        //上传到临时文件夹
+        fileInfo.getFile().transferTo(new File(tempPdfSrc));
+       //复制文件到远程映射盘
+        Files.copy(Paths.get(tempPdfSrc),Paths.get(pdfSrc));
+        //删除临时文件
+        File tempFile = new File(tempPdfSrc);
+        if(tempFile.exists()){
+            tempFile.delete();
+        }
         //成功的话fileInfo成功
         fileInfo.setSuccess(Short.valueOf("1"));
         fileInfo.setPdfPath(pdfSrc);
         fileInfo.setEndTime(new Date());
         receivePdfLogMapper.updateByPrimaryKeySelective(fileInfo);
         return Msg.success();
+    }
+
+    /**
+     * 组织全路径且目录不存在创建目录
+     * @param fileInfo
+     * @param sysFlag
+     * @param uuid
+     * @param tempPdfFileSrc
+     * @return
+     */
+    private String getFileSrc(FileInfo fileInfo, String sysFlag, String uuid, String tempPdfFileSrc) {
+        String tempPdfPath = tempPdfFileSrc + sysFlag + "\\" + fileInfo.getPatientId();
+        //创建目录
+        if (!new File(tempPdfPath).isDirectory()) {
+            new File(tempPdfPath).mkdirs();
+        }
+        return tempPdfPath + "\\" + uuid + ".pdf";
     }
 
     /**
