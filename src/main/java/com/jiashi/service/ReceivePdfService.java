@@ -103,17 +103,21 @@ public class ReceivePdfService {
         //masterId
         String masterId = master.getId();
         detail.setMasterid(masterId);
+        //传输系统标识
+        String sysFlag = fileInfo.getSysFlag();
+        detail.setSource(sysFlag);
         //文件标识
         String fileFlag = fileInfo.getFileFlag();
-        detail.setSubassort(fileFlag);
+        if("BloodSugar".equals(sysFlag)){
+            detail.setTitle(fileFlag);
+        }else{
+            detail.setSubassort(fileFlag);
+        }
         //根据masterId和文件标识
         List<Archive_Detail> details = detailMapper.selectAllByMasterIdAndFileFlag(detail);
 
         //设置文件名
         detail.setTitle(fileInfo.getFileTitle());
-        //传输系统标识
-        String sysFlag = fileInfo.getSysFlag();
-        detail.setSource(sysFlag);
         //新文件路径
         String uuid = UUID.randomUUID().toString().replaceAll("-","");
         String pdfSrc = getFileSrc(fileInfo, sysFlag, uuid, pdfFileSrc);

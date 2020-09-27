@@ -130,6 +130,9 @@
           <if test="subassort != null and subassort != ''">
               AND SubAssort = #{subassort,jdbcType=NVARCHAR}
           </if>
+          <if test="title != null and title != ''">
+              AND Title = #{title,jdbcType=NVARCHAR}
+          </if>
       </where>
   </select>
 </mapper>
