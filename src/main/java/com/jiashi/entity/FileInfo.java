@@ -33,4 +33,6 @@ public class FileInfo implements Serializable {
     private String pdfPath;
 
     private Date endTime;
+
+    private String str1;
 }

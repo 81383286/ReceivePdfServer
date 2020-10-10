@@ -14,6 +14,7 @@
     <result column="success" jdbcType="TINYINT" property="success" />
     <result column="pdf_path" jdbcType="NVARCHAR" property="pdfPath" />
     <result column="end_time" jdbcType="TIMESTAMP" property="endTime" />
+    <result column="str1" jdbcType="NVARCHAR" property="str1" />
   </resultMap>
   <sql id="Base_Column_List">
     id, patient_id, file_flag, file_title, fentry_no, assort_id, sys_flag, create_time, port,
@@ -131,4 +132,15 @@
     </set>
     where id = #{id,jdbcType=NVARCHAR}
   </update>
+
+  <!--查询不成功的记录-->
+  <select id="selectAllByError" resultMap="BaseResultMap">
+    select archive_receivepdf_log.*,archive_master.id c1 from archive_receivepdf_log
+    inner join archive_master
+    on
+    archive_receivepdf_log.patient_id = archive_master.patient_id
+    <where>
+      success = 0
+    </where>
+  </select>
 </mapper>

@@ -1,6 +1,6 @@
 server:
   ##端口
-  port: 8082
+  port: 8083
   servlet:
     ##根路径
     context-path: /receivePdf
@@ -30,7 +30,6 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
-    #name: C:/logs/RecivePdfServer/RecivePdfServer.log
     name: D:/logs/RecivePdfServer/RecivePdfServer.log
 #mybatis路径配置
 mybatis:
@@ -39,7 +38,6 @@ mybatis:
   mybatis.configuration.map-underscore-to-camel-case: true
 
 ##保存pdf文件根目录
-#tempPdfFileSrc: C:\pdfTemp\
-#pdfFileSrc: C:\pdf\
-tempPdfFileSrc: D:\pdf\
+tempPdfFileSrc: D:\JSWorking\ReceivePdf\pdfBackup\
+#pdfFileSrc: D:\pdf\
 pdfFileSrc: G:\pdf\

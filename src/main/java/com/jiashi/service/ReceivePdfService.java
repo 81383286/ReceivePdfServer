@@ -38,7 +38,7 @@ public class ReceivePdfService {
     private String pdfFileSrc;
     @Value("${server.port}")
     private String port;
-    public Msg receivePdf(FileInfo fileInfo) throws Exception{
+    public Msg receivePdf(FileInfo fileInfo){
         fileInfo.setCreateTime(new Date());
         log.error(fileInfo.toString());
         //判断不为空
@@ -73,21 +73,45 @@ public class ReceivePdfService {
         if(CollectionUtils.isEmpty(list)){
             return Msg.fail("记帐号不存在!");
         }
-
         //文件分类编号
         String fentryNo = fileInfo.getFentryNo();
         //转换文件分类id
         String assortId = getAssortId(fentryNo);
-        if(StringUtils.isBlank(assortId)){
+        if (StringUtils.isBlank(assortId)) {
             return Msg.fail("文件分类编码不存在!");
         }
-        fileInfo.setAssortId(assortId);
-        fileInfo.setPort(Integer.valueOf(port));
-        //添加进日志
-        receivePdfLogMapper.insertSelective(fileInfo);
-        log.error(fileInfo.toString());
+        //定义临时文件路径
+        String tempPdfSrc = "";
+        //定义uuid
+        String uuid = "";
+        try {
+            fileInfo.setAssortId(assortId);
+            fileInfo.setPort(Integer.valueOf(port));
+            //新文件路径
+            uuid = UUID.randomUUID().toString().replaceAll("-","");
+            //上传到服务器本地磁盘D临时文件夹
+            tempPdfSrc = getFileSrc(fileInfo, fileInfo.getSysFlag(), uuid, tempPdfFileSrc);
+            fileInfo.setPdfPath(tempPdfSrc);
+            //添加进日志
+            receivePdfLogMapper.insertSelective(fileInfo);
+            log.error(fileInfo.toString());
+        }catch (Exception e){
+            log.error("插入数据库信息错误!",e.getMessage());
+            return Msg.fail("服务器内部错误!");
+        }
+        try{
+            //上传到临时文件夹
+            fileInfo.getFile().transferTo(new File(tempPdfSrc));
+        }catch (Exception e){
+            log.error("保存pdf临时文件出错了!",e.getMessage());
+            return Msg.fail("保存pdf临时文件出错了!");
+        }
         //数据库及转存操作
-        savePdf(fileInfo,list.get(0));
+        try{
+            savePdf(fileInfo,list.get(0).getId());
+        }catch (Exception e){
+            log.error("业务处理出错了!",e.getMessage());
+        }
         return Msg.success();
     }
 
@@ -97,11 +121,10 @@ public class ReceivePdfService {
      * @return
      */
     @Transactional
-    public Msg savePdf(FileInfo fileInfo, Archive_Master master) throws Exception{
+    public Msg savePdf(FileInfo fileInfo,String masterId) throws Exception{
         Archive_Detail detail = new Archive_Detail();
         detail.setFlag("0");
         //masterId
-        String masterId = master.getId();
         detail.setMasterid(masterId);
         //传输系统标识
         String sysFlag = fileInfo.getSysFlag();
@@ -140,14 +163,11 @@ public class ReceivePdfService {
             }
             detailMapper.updateByPrimaryKeySelective(detail);
         }
-        //上传到服务器本地磁盘D临时文件夹
-        String tempPdfSrc = getFileSrc(fileInfo, sysFlag, uuid, tempPdfFileSrc);
-        //上传到临时文件夹
-        fileInfo.getFile().transferTo(new File(tempPdfSrc));
+
        //复制文件到远程映射盘
-        Files.copy(Paths.get(tempPdfSrc),Paths.get(pdfSrc));
+        Files.copy(Paths.get(fileInfo.getPdfPath()),Paths.get(pdfSrc));
         //删除临时文件
-        File tempFile = new File(tempPdfSrc);
+        File tempFile = new File(fileInfo.getPdfPath());
         if(tempFile.exists()){
             tempFile.delete();
         }
