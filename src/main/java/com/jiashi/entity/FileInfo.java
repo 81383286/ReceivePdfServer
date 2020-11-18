@@ -35,4 +35,6 @@ public class FileInfo implements Serializable {
     private Date endTime;
 
     private String str1;
+
+    private String c1;
 }

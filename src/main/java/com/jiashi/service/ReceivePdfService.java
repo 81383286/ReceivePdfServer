@@ -6,6 +6,7 @@ import com.jiashi.dao.Archive_MasterMapper;
 import com.jiashi.entity.Archive_Detail;
 import com.jiashi.entity.Archive_Master;
 import com.jiashi.entity.FileInfo;
+import com.jiashi.util.ExceptionPrintUtil;
 import com.jiashi.util.Msg;
 import com.lowagie.text.exceptions.BadPasswordException;
 import com.lowagie.text.pdf.PdfReader;
@@ -21,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 @Slf4j
@@ -41,31 +43,11 @@ public class ReceivePdfService {
     public Msg receivePdf(FileInfo fileInfo){
         fileInfo.setCreateTime(new Date());
         log.error(fileInfo.toString());
-        //判断不为空
-        Msg msg = JedgeNullParams(fileInfo);
+        //判断是否符合条件
+        Msg msg = jedgeNullParams(fileInfo);
         if(msg.getCode() == 200){
             return msg;
         }
-        //判断是否pdf文件
-        MultipartFile file = fileInfo.getFile();
-        //获取扩张名
-        String originalFilename = file.getOriginalFilename();
-        String ext = originalFilename.substring(originalFilename.lastIndexOf(".") + 1, originalFilename.length());
-        if (!"pdf".equals(ext)) {
-            return Msg.fail("目前只支持传输pdf文件!");
-        }
-        //验证文件的完整性
-        try {
-            new PdfReader(file.getBytes());
-        } catch (BadPasswordException e) {
-            log.error("此pdf文档为加密文档,不支持加密文档!",e.getMessage());
-            return Msg.fail("此pdf文档为加密文档,不支持加密文档!");
-        } catch (Exception e) {
-            log.error("此文档为无效文档,请重新上传!",e.getMessage());
-            return Msg.fail("此文档为无效文档,请重新上传!");
-        }
-        //判断pdf是否可用
-        //判断记帐号是否存在
         String patientId = fileInfo.getPatientId();
         Archive_Master master = new Archive_Master();
         master.setPatientId(patientId);
@@ -73,13 +55,8 @@ public class ReceivePdfService {
         if(CollectionUtils.isEmpty(list)){
             return Msg.fail("记帐号不存在!");
         }
-        //文件分类编号
-        String fentryNo = fileInfo.getFentryNo();
-        //转换文件分类id
-        String assortId = getAssortId(fentryNo);
-        if (StringUtils.isBlank(assortId)) {
-            return Msg.fail("文件分类编码不存在!");
-        }
+        //添加接收日志
+        String assortId = (String)msg.getExtend().get("assortId");
         //定义临时文件路径
         String tempPdfSrc = "";
         //定义uuid
@@ -96,6 +73,7 @@ public class ReceivePdfService {
             receivePdfLogMapper.insertSelective(fileInfo);
             log.error(fileInfo.toString());
         }catch (Exception e){
+            ExceptionPrintUtil.printException(e);
             log.error("插入数据库信息错误!",e.getMessage());
             return Msg.fail("服务器内部错误!");
         }
@@ -103,13 +81,15 @@ public class ReceivePdfService {
             //上传到临时文件夹
             fileInfo.getFile().transferTo(new File(tempPdfSrc));
         }catch (Exception e){
+            ExceptionPrintUtil.printException(e);
             log.error("保存pdf临时文件出错了!",e.getMessage());
             return Msg.fail("保存pdf临时文件出错了!");
         }
         //数据库及转存操作
         try{
-            savePdf(fileInfo,list.get(0).getId());
+            savePdf(fileInfo,list.get(0).getId(),1);
         }catch (Exception e){
+            ExceptionPrintUtil.printException(e);
             log.error("业务处理出错了!",e.getMessage());
         }
         return Msg.success();
@@ -121,7 +101,9 @@ public class ReceivePdfService {
      * @return
      */
     @Transactional
-    public Msg savePdf(FileInfo fileInfo,String masterId) throws Exception{
+    public Msg savePdf(FileInfo fileInfo,String masterId,Integer source) throws Exception{
+        //新文件路径
+        String uuid = UUID.randomUUID().toString().replaceAll("-","");
         Archive_Detail detail = new Archive_Detail();
         detail.setFlag("0");
         //masterId
@@ -141,8 +123,6 @@ public class ReceivePdfService {
 
         //设置文件名
         detail.setTitle(fileInfo.getFileTitle());
-        //新文件路径
-        String uuid = UUID.randomUUID().toString().replaceAll("-","");
         String pdfSrc = getFileSrc(fileInfo, sysFlag, uuid, pdfFileSrc);
         detail.setPdfPath(pdfSrc);
         //设置分类id
@@ -158,24 +138,50 @@ public class ReceivePdfService {
             //不为空，修改，并删除文件
             //删除文件
             File oldFile = new File(details.get(0).getPdfPath());
-            if(oldFile.exists()){
-                oldFile.delete();
+            //记录修改前的路径
+            fileInfo.setStr1(details.get(0).getPdfPath());
+            try {
+                if(oldFile.exists()){
+                    oldFile.delete();
+                }
+            }catch(Exception e){
+                ExceptionPrintUtil.printException(e);
+                log.error("替换原来文件时删除G盘文件:"+details.get(0).getPdfPath()+"失败");
             }
             detailMapper.updateByPrimaryKeySelective(detail);
         }
-
-       //复制文件到远程映射盘
-        Files.copy(Paths.get(fileInfo.getPdfPath()),Paths.get(pdfSrc));
-        //删除临时文件
-        File tempFile = new File(fileInfo.getPdfPath());
+        //读取原文件
+        String fileSrc = fileInfo.getPdfPath();
+        File tempFile = new File(fileSrc);
         if(tempFile.exists()){
+            //如果是补偿任务，先把原文件转存一遍后删除
+            if(null != source && source == 2){
+                String targetSrc = tempFile.getParent() + "\\" + uuid + ".pdf";
+                Files.copy(Paths.get(fileSrc),Paths.get(targetSrc), StandardCopyOption.REPLACE_EXISTING);
+                fileSrc = targetSrc;
+            }
+            //复制文件到远程映射盘
+            Files.copy(Paths.get(fileSrc),Paths.get(pdfSrc), StandardCopyOption.REPLACE_EXISTING);
+            //删除原文件
             tempFile.delete();
+            if(null != source && source == 2){
+                //删除转存文件
+                new File(fileSrc).delete();
+            }
+            //判断是否是空目录，是空目录一起删除
+            String absolutePath = tempFile.getParent();
+            File directory = new File(absolutePath);
+            if(directory.isDirectory() && directory.length() <= 0){
+                directory.delete();
+            }
+            //成功的话fileInfo成功
+            fileInfo.setSuccess(Short.valueOf("1"));
+            fileInfo.setPdfPath(pdfSrc);
+            fileInfo.setEndTime(new Date());
+            receivePdfLogMapper.updateByPrimaryKeySelective(fileInfo);
+        }else{
+            log.error("原文件不存在,"+fileInfo.toString());
         }
-        //成功的话fileInfo成功
-        fileInfo.setSuccess(Short.valueOf("1"));
-        fileInfo.setPdfPath(pdfSrc);
-        fileInfo.setEndTime(new Date());
-        receivePdfLogMapper.updateByPrimaryKeySelective(fileInfo);
         return Msg.success();
     }
 
@@ -200,7 +206,7 @@ public class ReceivePdfService {
      * 判断不为空
      * @param fileInfo
      */
-    private Msg JedgeNullParams(FileInfo fileInfo) {
+    private Msg jedgeNullParams(FileInfo fileInfo) {
         if(fileInfo.getFile() == null){
             return Msg.fail("file参数不能为空!");
         }
@@ -220,7 +226,34 @@ public class ReceivePdfService {
         if(StringUtils.isBlank(fileInfo.getSysFlag())){
             return Msg.fail("sysFlag参数不能为空!");
         }
-        return Msg.success();
+        //判断是否pdf文件
+        MultipartFile file = fileInfo.getFile();
+        //获取扩张名
+        String originalFilename = file.getOriginalFilename();
+        String ext = originalFilename.substring(originalFilename.lastIndexOf(".") + 1, originalFilename.length());
+        if (!"pdf".equals(ext)) {
+            return Msg.fail("目前只支持传输pdf文件!");
+        }
+        //验证文件的完整性
+        try {
+            new PdfReader(file.getBytes());
+        } catch (BadPasswordException e) {
+            ExceptionPrintUtil.printException(e);
+            log.error("此pdf文档为加密文档,不支持加密文档!",e.getMessage());
+            return Msg.fail("此pdf文档为加密文档,不支持加密文档!");
+        } catch (Exception e) {
+            ExceptionPrintUtil.printException(e);
+            log.error("此文档为无效文档,请重新上传!",e.getMessage());
+            return Msg.fail("此文档为无效文档,请重新上传!");
+        }
+        //文件分类编号
+        String fentryNo = fileInfo.getFentryNo();
+        //转换文件分类id
+        String assortId = getAssortId(fentryNo);
+        if (StringUtils.isBlank(assortId)) {
+            return Msg.fail("文件分类编码不存在!");
+        }
+        return Msg.success().add("assortId",assortId);
     }
 
     /**血糖编码：8888
